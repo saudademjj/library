@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>你是哪个操作系统？(梗测试版)</title>
+    <style>
+        :root {
+            --primary: #6c5ce7;
+            --secondary: #a29bfe;
+            --bg: #1e1e2e;
+            --card-bg: #2d2d44;
+            --text: #ffffff;
+            --accent: #00cec9;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            background-color: var(--card-bg);
+            padding: 2rem;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            max-width: 600px;
+            width: 100%;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        h1 {
+            color: var(--secondary);
+            margin-bottom: 1.5rem;
+            font-size: 1.8rem;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 10px;
+            background-color: #444;
+            border-radius: 5px;
+            margin-bottom: 2rem;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background-color: var(--accent);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .question-box {
+            margin-bottom: 2rem;
+        }
+
+        .question-text {
+            font-size: 1.3rem;
+            margin-bottom: 1.5rem;
+            line-height: 1.5;
+        }
+
+        .options-grid {
+            display: grid;
+            gap: 1rem;
+        }
+
+        button.option-btn {
+            background: transparent;
+            border: 2px solid var(--primary);
+            color: var(--text);
+            padding: 15px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.2s;
+            text-align: left;
+        }
+
+        button.option-btn:hover {
+            background: var(--primary);
+            transform: translateY(-2px);
+        }
+
+        /* 结果页样式 */
+        .result-box {
+            display: none;
+            animation: fadeIn 0.5s;
+        }
+
+        .os-logo {
+            font-size: 4rem;
+            margin: 1rem 0;
+        }
+
+        .os-title {
+            font-size: 2rem;
+            color: var(--accent);
+            margin-bottom: 0.5rem;
+        }
+
+        .os-desc {
+            color: #ccc;
+            line-height: 1.6;
+            margin-bottom: 2rem;
+        }
+
+        .restart-btn {
+            background: var(--accent);
+            border: none;
+            padding: 10px 30px;
+            border-radius: 50px;
+            color: #000;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 1.1rem;
+        }
+
+        .restart-btn:hover {
+            opacity: 0.9;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* 手机端适配 */
+        @media (max-width: 480px) {
+            .container { padding: 1.5rem; }
+            .question-text { font-size: 1.1rem; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div id="quiz-area">
+        <div class="progress-bar">
+            <div class="progress-fill" id="progress"></div>
+        </div>
+        <div class="question-box">
+            <h2 id="question" class="question-text">加载中...</h2>
+            <div id="options" class="options-grid">
+                </div>
+        </div>
+    </div>
+
+    <div id="result-area" class="result-box">
+        <div class="os-logo" id="os-icon">💻</div>
+        <h2 class="os-title" id="os-name">OS Name</h2>
+        <p class="os-desc" id="os-description">Description goes here.</p>
+        <button class="restart-btn" onclick="restartQuiz()">重测一次 (Sudo Reboot)</button>
+    </div>
+</div>
+
+<script>
+    // 题库配置：包含题目、选项以及对应的 OS 权重
+    // key: win, mac, ubuntu, arch, kali, temple
+    const questions = [
+        {
+            text: "当你写完了一份 5000 字的文档，突然软件卡死未响应，你的第一反应是？",
+            options: [
+                { text: "😨 等待程序响应，顺便祈祷微软不要让我失望。", type: "win" },
+                { text: "☕ 淡定，Time Machine 应该每小时都备份了，喝口咖啡。", type: "mac" },
+                { text: "😡 无论是谁写的这个垃圾软件，我要去 GitHub 提 Issue 喷死他。", type: "arch" },
+                { text: "💾 我是用 Vim 写的，随时 :w 保存，不存在这种问题。", type: "ubuntu" }
+            ]
+        },
+        {
+            text: "你的电脑桌面上通常是什么样子的？",
+            options: [
+                { text: "📁 堆满了图标、快捷方式和新建文件夹(2)。", type: "win" },
+                { text: "✨ 一张 4K 高清极简壁纸，桌面空无一物，或者只有 Dock栏。", type: "mac" },
+                { text: "⬛ 纯黑背景，上面跑着 htop 和 neofetch 的终端窗口。", type: "arch" },
+                { text: "💀 默认壁纸，包含各种网络渗透工具的快捷方式。", type: "kali" }
+            ]
+        },
+        {
+            text: "如果让你给电脑安装软件，你更习惯哪种方式？",
+            options: [
+                { text: "🖱️ 下载 .exe，双击，下一步，下一步，完成。", type: "win" },
+                { text: "🍎 打开 App Store 或者把图标拖进 Applications 文件夹。", type: "mac" },
+                { text: "⌨️ sudo apt install... 或者 docker compose up", type: "ubuntu" },
+                { text: "🔧 必须从源码编译！./configure && make && make install", type: "temple" }
+            ]
+        },
+        {
+            text: "朋友让你帮忙修电脑，因为他的电脑由于中病毒变得很慢，你会？",
+            options: [
+                { text: "🛡️ 装个 360 或者火绒，全盘杀毒。", type: "win" },
+                { text: "🤷‍♂️ 告诉他：'这就不得不推荐你买 MacBook 了，从来不中毒'。", type: "mac" },
+                { text: "💻 帮他把系统格了，直接装个 Linux Mint。", type: "ubuntu" },
+                { text: "🕵️‍♂️ 趁机在他的网络里留个后门，顺便分析一下病毒的 Payload。", type: "kali" }
+            ]
+        },
+        {
+            text: "对于“系统更新”这件事，你的态度是？",
+            options: [
+                { text: "🤬 别提了！我正打团战呢它突然全屏弹窗倒计时重启！", type: "win" },
+                { text: "💅 只要不是大版本更新变卡，我一般随缘升。", type: "mac" },
+                { text: "🔄 pacman -Syu 是我每天早起的第一件事，滚挂了就修。", type: "arch" },
+                { text: "✝️ 既然是上帝的旨意，神是不需要更新的。", type: "temple" }
+            ]
+        },
+        {
+            text: "你最常访问的技术社区/网站是？",
+            options: [
+                { text: "🎮 Steam, Epic, 还有各种破解资源论坛。", type: "win" },
+                { text: "🎨 Dribbble, Behance, 小红书（看桌搭）。", type: "mac" },
+                { text: "🐧 Stack Overflow, Reddit, GitHub。", type: "ubuntu" },
+                { text: "🧅 Tor 浏览器里的暗网，或者 4chan。", type: "kali" }
+            ]
+        }
+    ];
+
+    // 结果配置
+    const results = {
+        win: {
+            name: "Windows 11 (蓝屏版)",
+            icon: "🪟",
+            desc: "你是一个实用主义者，或者单纯被生活磨平了棱角。你习惯了兼容并包，虽然偶尔会遇到“未响应”和“强制更新”的崩溃时刻，但你总能重启解决问题。你是大多数人的选择，拥有最强的游戏性能，但内心深处，你可能真的很想把那个自动更新关掉。"
+        },
+        mac: {
+            name: "macOS (星巴克尊享版)",
+            icon: "🍎",
+            desc: "你追求优雅、稳定和美感。你可能从事设计、剪辑或前端开发。你愿意为“生态系统”和“Retina屏幕”支付溢价。你的口头禅可能是“它就是好用（It just works）”。虽然你有时会因为接口太少要带一堆转接头而烦恼，但你绝不会承认。"
+        },
+        ubuntu: {
+            name: "Ubuntu / Linux Mint",
+            icon: "🐧",
+            desc: "你是开源世界的入门者或稳健派。你喜欢掌控自己的设备，但又不想把时间全花在折腾驱动上。你相信自由软件的力量，熟练使用终端，但如果能用图形界面解决，你也乐见其成。你是技术宅里比较好相处的那一类。"
+        },
+        arch: {
+            name: "Arch Linux",
+            icon: "⚙️",
+            desc: "I use Arch, BTW. 你是真正的硬核玩家。你享受从零开始构建系统的过程，认为预装软件都是臃肿的垃圾。遇到问题你第一反应不是百度，而是去读 Arch Wiki。你享受这种对系统的绝对掌控权，哪怕代价是显卡驱动炸了修一晚上。"
+        },
+        kali: {
+            name: "Kali Linux",
+            icon: "🕵️",
+            desc: "警告：检测到黑客气质。你可能是一个网络安全专家，或者只是觉得《黑客帝国》很酷的中二少年。你的工具箱里装满了 nmap, wireshark 和 metasploit。当你打开电脑时，你不仅是在上网，你是在扫描整个网络的漏洞。请遵纪守法！"
+        },
+        temple: {
+            name: "TempleOS",
+            icon: "✝️",
+            desc: "你已超越凡人的理解范畴。你的代码由神谕指引，你可能在这个世界上显得格格不入，思维极其跳跃且混沌。你不需要网络支持，因为你直接与更高维度的智慧连接。你就是 Terry Davis 的精神继承者，纯粹、疯狂且神圣。"
+        }
+    };
+
+    let currentQuestion = 0;
+    let scores = { win: 0, mac: 0, ubuntu: 0, arch: 0, kali: 0, temple: 0 };
+
+    function loadQuestion() {
+        const q = questions[currentQuestion];
+        document.getElementById("question").innerText = q.text;
+        const optionsDiv = document.getElementById("options");
+        optionsDiv.innerHTML = "";
+
+        // 更新进度条
+        const progress = ((currentQuestion) / questions.length) * 100;
+        document.getElementById("progress").style.width = `${progress}%`;
+
+        q.options.forEach(opt => {
+            const btn = document.createElement("button");
+            btn.className = "option-btn";
+            btn.innerText = opt.text;
+            btn.onclick = () => selectOption(opt.type);
+            optionsDiv.appendChild(btn);
+        });
+    }
+
+    function selectOption(type) {
+        scores[type]++;
+        currentQuestion++;
+
+        if (currentQuestion < questions.length) {
+            loadQuestion();
+        } else {
+            showResult();
+        }
+    }
+
+    function showResult() {
+        document.getElementById("quiz-area").style.display = "none";
+        document.getElementById("result-area").style.display = "block";
+        document.getElementById("progress").style.width = "100%";
+
+        // 找出分数最高的 OS
+        let maxScore = 0;
+        let resultKey = "win"; // 默认
+
+        // 稍微增加一点随机性，如果分数相同，优先保留更极客的选项
+        const priority = ['temple', 'kali', 'arch', 'ubuntu', 'mac', 'win'];
+
+        // 简单的最大值查找
+        for (const [key, value] of Object.entries(scores)) {
+            if (value > maxScore) {
+                maxScore = value;
+                resultKey = key;
+            } else if (value === maxScore) {
+                // 如果平分，按优先级列表决定
+                if (priority.indexOf(key) < priority.indexOf(resultKey)) {
+                     resultKey = key;
+                }
+            }
+        }
+
+        const res = results[resultKey];
+        document.getElementById("os-name").innerText = res.name;
+        document.getElementById("os-icon").innerText = res.icon;
+        document.getElementById("os-description").innerText = res.desc;
+    }
+
+    function restartQuiz() {
+        currentQuestion = 0;
+        scores = { win: 0, mac: 0, ubuntu: 0, arch: 0, kali: 0, temple: 0 };
+        document.getElementById("result-area").style.display = "none";
+        document.getElementById("quiz-area").style.display = "block";
+        loadQuestion();
+    }
+
+    // 初始化
+    loadQuestion();
+
+</script>
+
+</body>
+</html>
