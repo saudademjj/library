@@ -1,0 +1,1 @@
+ALTER TABLE "reservations" ADD COLUMN "reservation_type" text DEFAULT 'walk_in' NOT NULL;

@@ -1,0 +1,1 @@
+ALTER TABLE "seats" ADD COLUMN "rotation" integer DEFAULT 0;
