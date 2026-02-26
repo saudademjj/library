@@ -2,6 +2,37 @@
 
 一个基于现代技术栈的全栈图书馆座位预约系统：Next.js（App Router）+ Hono（API）+ PostgreSQL + Drizzle ORM + shadcn/ui + Tailwind CSS 4。
 
+## 快速开始（最短路径）
+
+```bash
+cp .env.example .env.local
+docker compose up -d
+npm install
+npm run db:migrate
+npm run dev
+```
+
+默认访问：`http://localhost:3000`
+
+## 常用命令速查
+
+```bash
+npm run dev          # 开发模式
+npm run build        # 生产构建
+npm run start        # 启动生产服务
+npm run test         # 运行测试
+npm run db:migrate   # 执行迁移
+npm run db:seed      # 初始化数据
+npm run db:studio    # 打开 Drizzle Studio
+```
+
+## 文档导航
+
+- 想先跑起来：看「快速开始（最短路径）」与「本地开发」
+- 想看接口：看「API 文档」
+- 想看部署：看「部署」
+- 想看安全与性能：看「注意事项」
+
 ## 技术栈
 
 ### 前端
