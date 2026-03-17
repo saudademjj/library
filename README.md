@@ -1,96 +1,121 @@
 <div align="center">
-  <a href="./README_en.md">English</a> | 简体中文
+  <p>Modern Full-stack Library Seat Reservation System / 现代全栈图书馆座位预约系统</p>
+  <p>
+    <a href="#english">English</a> •
+    <a href="#简体中文">简体中文</a>
+  </p>
 </div>
 
-# 校园图书馆座位预约系统 (Library Seat Reservation System)
+---
 
-![Next.js](https://img.shields.io/badge/Next.js-16.0-000000?style=flat-square&logo=next.js)
-![Hono](https://img.shields.io/badge/Hono-4.10-E36002?style=flat-square&logo=hono)
-![Drizzle](https://img.shields.io/badge/Drizzle_ORM-0.44-C5F74F?style=flat-square&logo=drizzle)
-![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-4169E1?style=flat-square&logo=postgresql)
+<h2 id="english">🇬🇧 English</h2>
 
-本项目是一个高性能、全栈式的物理资源预约管理系统。系统旨在解决高并发场景下校园图书馆、自习室座位的分配冲突与管理低效问题。通过深度集成 Next.js 服务端组件与 Hono 边缘 API，实现了毫秒级的预约响应与高精度的空间可视化。
+# Library Seat Reservation System
 
-## 🏛️ 系统架构设计
+This is a modern, full-stack library seat reservation system built with a robust and cutting-edge technology stack. It features a seamless user experience, secure authentication, and efficient database operations, perfectly suited for managing library zones, seats, and user reservations.
 
-### 1. 技术栈选型原理解析
-- **Next.js 16 (App Router)**: 选择 React 19 并发模式与 Server Components，旨在将 80% 的 UI 渲染压力保留在服务端，显著降低移动端用户的设备功耗。
-- **Hono (API Layer)**: 采用部署在 Edge Runtime 的 Hono 框架。其极小的运行载荷与极速的路由匹配引擎，使得 API 层的端到端延迟降低了约 40%。
-- **Drizzle ORM**: 相比 Prisma，Drizzle 提供了更加轻量、零抽象开销的 SQL 构建体验，并能实现数据库模式与 TypeScript 类型的原生同步。
+### 🛠 Technology Stack
 
-### 2. 数据模型与实体关系 (ERD)
-系统核心由以下四个实体构建，确保了数据结构的扁平化与检索的高效性：
-- **Users**: 存储用户信息、学号及 RBAC 角色权限。
-- **Zones**: 区域实体，包含地理位置元数据（楼层、描述）及布局配置。
-- **Seats**: 最小物理单元，存储在 Zone 内的相对坐标 (x, y) 与当前状态。
-- **Reservations**: 业务核心表，关联 User 与 Seat，记录完整的时间跨度与生命周期状态。
+- **Frontend**: Next.js 15+ (App Router), React 19, TypeScript 5, Tailwind CSS 4, shadcn/ui
+- **Backend API**: Hono (mounted on Next.js API Routes)
+- **Database**: PostgreSQL, Drizzle ORM
+- **Authentication**: JWT-based session management, Web Crypto API for secure hashing
 
-### 3. 核心业务逻辑实现
+### ✨ Core Features
 
-#### 预约冲突检测算法 (Collision Detection)
-系统采用**非重叠区间校验逻辑**。当用户尝试预约 `[T_start, T_end]` 时，后端执行以下原子化查询：
-```sql
-SELECT count(*) FROM reservations 
-WHERE seat_id = $id 
-AND status NOT IN ('cancelled')
-AND (
-  (start_time, end_time) OVERLAPS ($T_start, $T_end)
-)
-```
-通过数据库级的事务锁定或 OVERLAPS 操作符，从物理层杜绝了双重预约的可能。
+- **User Management**: Secure registration and login, JWT authentication, role-based access control (Admin / Student).
+- **Zone Management (Admin)**: Full CRUD operations for library zones (e.g., floors, quiet areas).
+- **Seat Management (Admin)**: Dynamically create, edit, and toggle seat availability within specific zones.
+- **Reservation System**: 
+  - Conflict-free seat booking logic.
+  - Real-time status updates (Pending/Active/Completed/Cancelled).
+  - Strict ownership rules (Users can only manage their own bookings).
 
-#### 空间可视化渲染引擎
-前端通过解析后端返回的布局 JSON，动态映射为响应式组件。每个座位基于其 `rotation` 与 `coordinate` 属性进行绝对定位，支持动态的缩放与平移交互。
+### 🚀 Quick Start
 
-## 📂 深度目录分析
+1. **Environment Setup**:
+   ```bash
+   cp .env.example .env.local
+   # Update DATABASE_URL and JWT_SECRET inside .env.local
+   ```
+2. **Launch Database** (via Docker):
+   ```bash
+   docker compose up -d
+   ```
+3. **Install & Initialize**:
+   ```bash
+   npm install
+   npm run db:migrate
+   npm run dev
+   ```
+   Visit `http://localhost:3000` to interact with the system.
+
+### 📂 Directory Structure
 
 ```text
 library/
-├── drizzle/                # 自动化生成的 SQL 模式迁移文件与版本快照
-├── scripts/
-│   ├── seed.ts             # 基于 Faker.js 的大规模压力测试数据生成脚本
-│   └── repair_db.ts        # 针对由于异常中断导致的预约状态不一致自动修复工具
 ├── src/
-│   ├── app/api/[[...route]] # Hono API 的统筹入口，实现后端路由的统一治理
-│   ├── components/
-│   │   ├── spatial/        # 可视化核心：实现 Canvas/SVG 坐标转换逻辑
-│   │   └── dashboard/      # 管理员侧的高级统计图表与资源监控器
-│   ├── db/
-│   │   ├── schema.ts       # 核心实体建模：利用 Drizzle pgTable 定义强类型模型
-│   │   └── client.ts       # 连接池管理：针对边缘环境优化的高性能数据库驱动配置
-│   └── lib/                # 包含 JWT 校验、通用时间格式化与业务常量定义
-├── tests/                  # 包含针对预约冲突、自动取消逻辑的集成测试
-└── next.config.ts          # 针对 Webpack 与 Turbo 的专项性能调优配置
+│   ├── app/                  # Next.js App Router (Pages & Layouts)
+│   │   └── api/[[...route]]/ # Hono API Entry point
+│   ├── components/           # React & shadcn/ui components
+│   ├── db/                   # Drizzle schema definitions and DB connection
+│   └── lib/                  # Utilities, auth helpers, and TypeScript types
+├── drizzle/                  # Auto-generated database migrations
+└── ...config files           # Tailwind, Next, TypeScript, Drizzle configs
 ```
 
-## 🚀 开发者快速上手
+### 📄 License
+MIT License.
 
-### 1. 环境依赖
-- Node.js >= 20.10.0
-- PostgreSQL >= 15
-- Docker (用于快速启动数据库实例)
+---
 
-### 2. 部署流程
-```bash
-# 1. 深度依赖分析并安装
-npm install
+<h2 id="简体中文">🇨🇳 简体中文</h2>
 
-# 2. 配置物理存储层
-# 复制模板并填写 DATABASE_URL
-cp .env.example .env.local
+# 图书馆座位预约系统
 
-# 3. 模式推送与数据预置
-npm run db:push
-npm run db:seed
+这是一个基于现代技术栈打造的全栈图书馆座位预约系统。项目结合了当今主流的前后端技术，致力于提供流畅的用户体验、安全的身份认证体系以及高效的数据持久化操作，非常适合用于图书馆区域、座位与用户预约管理的落地。
 
-# 4. 开启高性能开发环境
-npm run dev
-```
+### 🛠 技术栈概览
 
-## 🛠️ 待办路线图 (Roadmap)
-- [ ] **可视化 2.0**: 引入 Three.js 驱动的 3D 实景选座交互。
-- [ ] **智能调度**: 基于用户信用分与历史偏好自动推荐最优座位。
-- [ ] **硬件集成**: 实现基于 MQTT 协议的座位物理指示灯状态实时同步。
+- **前端架构**: Next.js 15+ (App Router), React 19, TypeScript 5
+- **UI 呈现**: Tailwind CSS 4 配合 shadcn/ui (new-york 风格)，图标采用 Lucide React
+- **后端 API**: Hono 框架（直接挂载于 Next.js 的 API 路由下运行）
+- **持久层**: PostgreSQL 数据库，采用 Drizzle ORM 与 Drizzle Kit
+- **安全认证**: 基于 `jose` 的 JWT 认证与 Web Crypto API 密码哈希
 
-## 许可证
-本项目遵循 MIT License 协议。
+### ✨ 核心功能矩阵
+
+- **用户管理中心**：支持学号与邮箱双重验证注册、JWT 状态保持、严格的 RBAC 角色权限隔离（管理员/学生）。
+- **区域空间管理（管理员）**：支持图书馆不同楼层、不同功能区（如自习区、讨论区）的动态创建与维护。
+- **物理座位分配（管理员）**：可视化管理座位编号，支持一键切换座位的可用状态（故障维修/正常开放）。
+- **智能预约引擎**：
+  - 内置时间轴冲突检测，杜绝重复预约。
+  - 动态状态流转（预约中/进行中/已完成/已取消）。
+  - 严格的数据隔离界限：普通学生仅可操作自身的预约记录。
+
+### 🚀 最短启动路径
+
+1. **环境准备**：
+   ```bash
+   cp .env.example .env.local
+   # 请在 .env.local 中配置你的 DATABASE_URL 与 JWT_SECRET
+   ```
+2. **启动数据库容器**：
+   ```bash
+   docker compose up -d
+   ```
+3. **安装依赖与数据同步**：
+   ```bash
+   npm install
+   npm run db:migrate  # 同步表结构
+   npm run dev         # 启动开发服务器
+   ```
+   随后在浏览器访问 `http://localhost:3000` 即可。
+
+### 💡 生产环境部署建议
+
+- **安全加固**：上线前务必更换超高强度的 `JWT_SECRET`，并考虑引入 `bcrypt` 替换当前的 SHA-256。同时务必强制全站 HTTPS 并在 Hono 层配置严格的 CORS 与 Rate Limiting。
+- **性能优化**：对于高并发抢座场景，建议在后端引入 Redis 缓存预热座位信息，并在数据库层面根据时间戳与状态字段建立联合索引。
+
+### 📄 许可证
+本项目采用 MIT 协议开源。
