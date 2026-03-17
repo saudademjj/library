@@ -1,10 +1,8 @@
+<a id="readme-top"></a>
+
 # 图书馆座位预约系统
 
-**Language:** [Chinese](#chinese-version) | [English](#english-version)
-
-## Chinese Version
-
-**Language:** Chinese | [English](#english-version)
+<p align="right">中文 | <a href="#english-version">English</a></p>
 
 这是一个面向校园或图书馆场景的全栈座位预约系统，覆盖用户注册登录、区域与座位管理、预约创建与冲突检测等核心流程。仓库把前端界面、API、数据库迁移和基础测试整合在同一套工程中，适合作为完整业务系统原型。
 
@@ -91,7 +89,7 @@ JWT_SECRET=your-secret-key-change-in-production
 
 ## English Version
 
-**Language:** [Chinese](#chinese-version) | English
+<p align="right"><a href="#readme-top">中文</a> | English</p>
 
 This is a full-stack seat reservation system for library or campus scenarios. It covers user registration and login, zone and seat management, reservation creation, conflict detection, and role-based access control. The repository combines the frontend, API layer, database migrations, and test scripts in one project.
 
