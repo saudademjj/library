@@ -5,52 +5,37 @@
 [![Hono](https://img.shields.io/badge/Hono-4.10-orange?logo=hono)](https://hono.dev/)
 [![Drizzle](https://img.shields.io/badge/Drizzle-ORM-C5F74F?logo=drizzle)](https://orm.drizzle.team/)
 
-这是一个面向高并发校园场景的全栈式座位预约管理系统。系统通过 2D/3D 坐标映射实现座位的可视化管理，并针对预约冲突检测与数据一致性进行了深度优化，确保在复杂业务环境下系统的稳健性。
+本项目是一个基于 Next.js 和 Hono 开发的校园图书馆座位预约管理系统。系统实现了座位的可视化布局管理，并针对基础的预约冲突检测与数据一致性进行了逻辑实现，适用于自习室、图书馆等物理资源预约场景。
 
-## 核心特性
+## 核心功能
 
-- 多级权限控制 (RBAC): 系统区分管理员与普通学生角色，基于 JWT 实现安全的无状态身份验证与访问控制。
-- 可视化布局逻辑: 支持区域 (Zones) 与座位 (Seats) 的坐标化管理，布局信息以结构化 JSON 格式存储，可直接适配前端渲染引擎进行空间呈现。
-- 智能冲突检测算法: 内置严谨的时间段重叠检测逻辑，支持即时预约 (Walk-in) 与提前预约 (Advance) 模式，从底层防止物理资源的分配冲突。
-- 高性能全栈架构: 
-    - 后端: 采用轻量化、高性能的 Hono 框架构建 RESTful API。
-    - 数据库: 基于 PostgreSQL，利用 Drizzle ORM 实现强类型的数据库操作与模式迁移。
-    - 前端: 采用 Next.js 16 App Router 架构，结合 React 19 的并发渲染特性优化交互响应。
-- 状态机管理: 严格定义的预约状态流转体系 (Pending -> Active -> Completed/Cancelled)，确保业务链路的闭环与可追溯性。
+- 权限管理 (RBAC): 区分管理员与普通用户，基于 JWT 实现身份验证。
+- 布局管理: 支持区域与座位的坐标化配置，布局信息以 JSON 格式存储，可适配前端 Canvas 或 SVG 渲染。
+- 预约逻辑: 实现时间段冲突检测，支持即时预约与提前预约模式。
+- 架构设计: 
+    - 后端: 采用 Hono 框架构建 RESTful API，部署于 Next.js API Routes。
+    - 数据库: 使用 PostgreSQL，通过 Drizzle ORM 进行数据建模与操作。
+    - 前端: 基于 Next.js 16 App Router 与 React 19 构建。
 
 ## 技术栈
 
-### 前端层 (Frontend)
-- 框架: Next.js 16 (App Router)
-- 核心引擎: React 19
-- UI 组件体系: shadcn/ui + Radix UI
-- 样式标准: Tailwind CSS 4
-- 状态管理: Zustand
-
-### 后端层 (Backend)
-- API 框架: Hono
-- 数据库: PostgreSQL
-- 对象关系映射 (ORM): Drizzle ORM
-- 安全认证: jose (JWT)
-
-### 基础设施 (Infra)
-- 容器化: Docker Compose
-- 运行环境: Bun / Node.js
-- 开发辅助: tsx
+- 前端: Next.js 16, React 19, Tailwind CSS 4, shadcn/ui
+- 后端: Hono, Drizzle ORM, PostgreSQL
+- 其他: Zustand (状态管理), Docker Compose (环境部署)
 
 ## 项目结构
 
 ```text
 .
-├── drizzle             # 数据库迁移脚本 (SQL)
-├── scripts             # 数据初始化与维护脚本
+├── drizzle             # 数据库迁移文件
+├── scripts             # 数据播种与维护脚本
 ├── src
-│   ├── app             # 路由定义与 API 端点实现
-│   ├── components      # 原子化 React 组件
-│   ├── db              # 数据模型 Schema 与客户端配置
-│   └── lib             # 共享工具类与核心逻辑
-├── tests               # 业务逻辑集成测试用例
-└── drizzle.config.ts   # 数据库配置文件
+│   ├── app             # 路由与 API 实现
+│   ├── components      # React UI 组件
+│   ├── db              # Schema 定义与数据库客户端
+│   └── lib             # 工具函数
+├── tests               # 业务逻辑测试
+└── drizzle.config.ts   # Drizzle 配置
 ```
 
 ## 快速开始
@@ -61,30 +46,26 @@ npm install
 ```
 
 ### 2. 环境配置
-创建 `.env.local` 文件并配置数据库连接与密钥：
+创建 `.env.local`:
 ```env
 DATABASE_URL=postgresql://user:password@localhost:5432/library
-JWT_SECRET=your_jwt_secret_key
+JWT_SECRET=your_secret_key
 ```
 
 ### 3. 数据库初始化
 ```bash
-npm run db:generate  # 生成迁移脚本
-npm run db:migrate   # 执行数据库变更
+npm run db:push  # 或使用 migrate
 ```
 
-### 4. 启动开发服务器
+### 4. 启动项目
 ```bash
 npm run dev
 ```
 
-## 未来路线
-- 引入 Three.js 实现图书馆实景 3D 选座交互。
-- 增加信用分系统与自动化的爽约惩罚机制。
-- 扩展多馆管理逻辑，支持集团化或多校区运营。
+## 待办项 (TODO)
+- 优化前端 3D 可视化预览效果。
+- 增加简单的信用分扣除逻辑。
+- 完善管理员后台统计报表。
 
 ## 许可证
-本项目采用 MIT License 协议。
-
----
-Developed by [saudademjj](https://github.com/saudademjj)
+MIT License
