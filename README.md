@@ -1,110 +1,92 @@
+<div align="center">
+  <a href="./README.md">简体中文</a> | <a href="./README_en.md">English</a>
+</div>
+
 # 校园图书馆座位预约系统 / Library Seat Reservation System
 
-[简体中文](./README.md) | [English](./README_en.md)
+![Next.js](https://img.shields.io/badge/Next.js-16.0-000000?style=flat-square&logo=next.js)
+![React](https://img.shields.io/badge/React-19.0-61DAFB?style=flat-square&logo=react)
+![TypeScript](https://img.shields.io/badge/TypeScript-5.0-3178C6?style=flat-square&logo=typescript)
+![Hono](https://img.shields.io/badge/Hono-4.10-E36002?style=flat-square&logo=hono)
+![Drizzle](https://img.shields.io/badge/Drizzle_ORM-0.44-C5F74F?style=flat-square&logo=drizzle)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-4169E1?style=flat-square&logo=postgresql)
+![TailwindCSS](https://img.shields.io/badge/Tailwind_CSS-4.0-06B6D4?style=flat-square&logo=tailwind-css)
 
-本项目是一个基于 Next.js 16 和 Hono 框架构建的全栈座位预约管理系统。系统旨在解决图书馆、自习室等物理空间的资源分配问题，通过可视化布局与严谨的冲突检测逻辑，实现高效的座位预约与管理流程。
+本项目是一个专为高并发校园环境设计的全栈座位预约管理系统。系统基于 Next.js 16 App Router 与高性能 API 框架 Hono 构建，通过严谨的物理空间建模与状态机逻辑，解决了图书馆及自习室场景下的资源冲突、分配不均与管理冗余问题。
 
-This project is a full-stack seat reservation management system built on Next.js 16 and the Hono framework. It is designed to solve resource allocation issues in physical spaces such as libraries and study rooms, achieving efficient seat reservation and management through visual layout and rigorous conflict detection logic.
+This project is a full-stack seat reservation management system specifically designed for high-concurrency campus environments. Built with the Next.js 16 App Router and the high-performance Hono API framework, it addresses resource conflicts, uneven distribution, and management redundancy in libraries and study rooms through rigorous physical space modeling and state machine logic.
 
-## 核心特性 / Core Features
+## 核心架构设计 / Core Architectural Design
 
-- 细粒度权限控制 (RBAC / Granular Access Control):
-    - 基于 JWT (JSON Web Tokens) 的身份验证体系。
-    - 区分管理员 (Admin) 与学生 (Student) 角色，实现接口级与页面级的访问隔离。
-    - Auth system based on JWT with role-based access control for both API and UI layers.
+### 1. 物理空间模型化 (Physical Space Modeling)
+系统通过区域 (Zone) 与座位 (Seat) 的层级化定义，实现了对物理空间的数字孪生。
+- **空间元数据**: 采用结构化 JSON 存储布局坐标 (x, y) 与旋转角度，为前端可视化渲染提供原始数据。
+- **动态分级**: 支持楼层与区域的动态扩展，具备良好的横向兼容性。
+- **Spatial Metadata**: Structured JSON is used to store layout coordinates and rotation, providing raw data for frontend visual rendering.
+- **Dynamic Hierarchy**: Supports dynamic expansion of floors and zones, ensuring horizontal compatibility.
 
-- 可视化空间布局 (Visual Spatial Layout):
-    - 支持区域 (Zone) 与座位 (Seat) 的 2D 坐标映射。
-    - 布局数据以结构化 JSON 存储，支持前端 Canvas 或 SVG 的动态渲染。
-    - Supports 2D coordinate mapping for Zones and Seats, with layout data stored in JSON for dynamic rendering.
+### 2. 高可靠预约逻辑 (High-Reliability Reservation Logic)
+针对预约系统最核心的“时间冲突”问题，本项目在服务层实现了双重检测机制。
+- **冲突判定算法**: 采用区间重叠校验 (Interval Overlap Detection)，在数据库事务层级确保同一物理座位的同一时段不被二次分配。
+- **状态机流转**: 预约记录严格遵循 Pending -> Active -> Completed/Cancelled 的单向状态流转，由后端定时任务或触发器维护一致性。
+- **Conflict Detection**: Interval overlap detection ensures that the same physical seat is not double-booked at the database transaction level.
+- **State Machine**: Reservation records strictly follow a one-way state transition (Pending -> Active -> Completed/Cancelled) maintained by backend tasks or triggers.
 
-- 智能冲突检测 (Intelligent Conflict Detection):
-    - 实现了严格的时间段重叠校验算法 (Time-overlap checking)。
-    - 支持即时预约 (Walk-in) 与提前预约 (Advance Reservation) 两种模式。
-    - Implements rigorous time-overlap validation and supports both walk-in and advance booking modes.
+### 3. 全栈技术演进 (Full-stack Technology Evolution)
+- **后端边缘化**: Hono 框架的引入使得 API 能够部署在 Edge Runtime，极大地降低了端到端的请求时延。
+- **强类型 ORM**: Drizzle ORM 实现了从数据库 Schema 到前端 TypeScript 类型的全链路同步，消除了运行时的数据类型风险。
+- **Edge Runtime**: Integration of Hono allows APIs to be deployed on Edge, significantly reducing end-to-end latency.
+- **Type-safe ORM**: Drizzle ORM synchronizes database schemas with frontend TypeScript types, eliminating runtime data type risks.
 
-- 状态机驱动的流程 (State Machine Driven Workflow):
-    - 预约状态流转：Pending (待生效) -> Active (进行中) -> Completed (已完成) / Cancelled (已取消)。
-    - 确保业务数据的闭环，支持预约取消与自动释放逻辑。
-    - Comprehensive booking lifecycle management from creation to completion or cancellation.
+## 业务模块拆解 / Business Modules Analysis
 
-## 技术栈 / Technical Stack
+| 模块 / Module | 实现技术 / Tech | 核心功能 / Core Function |
+| :--- | :--- | :--- |
+| 认证 / Auth | Jose (JWT) | 基于角色的访问控制 (RBAC)，区分管理员与普通学生。 / Role-based access control. |
+| 预约 / Booking | Hono / Drizzle | 复杂的冲突检测算法与原子化数据库事务。 / Complex conflict detection and atomic transactions. |
+| 布局 / Layout | React 19 / JSON | 响应式的 2D 布局呈现与动态坐标映射。 / Responsive 2D layout and dynamic coordinate mapping. |
+| 后台 / Admin | shadcn/ui | 区域配置、座位维护与预约记录全局审计。 / Zone configuration and global audit logs. |
 
-### 前端层 / Frontend Layer
-- Next.js 16: 采用 App Router 架构，利用 Server Components 优化首屏加载。 / App Router architecture with RSC optimization.
-- React 19: 利用最新的并发特性与 Hook 体系。 / Utilizing the latest concurrent features and hooks.
-- Tailwind CSS 4: 响应式样式构建与原子化 CSS。 / Responsive styling with atomic CSS.
-- Radix UI & shadcn/ui: 基于无障碍标准的 UI 组件库。 / Accessible UI components based on Radix primitives.
-- Zustand: 轻量级客户端状态管理。 / Lightweight client-side state management.
-
-### 后端层 / Backend Layer
-- Hono: 部署在 Next.js Edge 运行时的高性能极简 API 框架。 / High-performance, minimalist API framework deployed on Edge.
-- Drizzle ORM: 提供完全类型安全的 SQL 查询与 Schema 迁移。 / Type-safe SQL querying and schema migrations.
-- PostgreSQL: 核心关系型数据库。 / Core relational database for persistent storage.
-- Jose: 实现底层的 JWT 生成与校验。 / Low-level JWT generation and verification.
-
-### 工程化 / Engineering
-- Docker Compose: 本地开发环境的快速容器化部署。 / Quick containerized deployment for local development.
-- tsx & ts-node: 脚本化任务执行环境。 / Scripting environment for maintenance tasks.
-- ESLint & Prettier: 代码规范与格式化。 / Linting and formatting standards.
-
-## 项目结构 / Project Structure
+## 项目目录结构 / Project Structure
 
 ```text
-library/
-├── drizzle/                # SQL 迁移文件与模式元数据 / SQL migration files and schema metadata
-├── public/                 # 静态资源文件 / Static assets
-├── scripts/                # 维护脚本 (数据库播种、修复、导出) / Maintenance scripts (seeding, repair, export)
+.
+├── drizzle/                # 数据库模式迁移历史与元数据 / DB migration history and metadata
+├── scripts/                # 系统维护工具 (播种数据、数据库修复、报表生成) / Maintenance tools
 ├── src/
-│   ├── app/                # Next.js 路由与 API 实现层 / Routes and API implementation
-│   │   ├── api/            # Hono API 路由定义 / Hono API route definitions
-│   │   └── (main)/         # 前端视图容器 / Frontend view containers
-│   ├── components/         # 业务逻辑组件与 UI 组件 / Business logic and UI components
-│   │   ├── ui/             # 基础原子组件 (shadcn) / Atomic UI components
-│   │   └── dashboard/      # 管理后台相关组件 / Admin dashboard components
-│   ├── db/                 # 数据库客户端与 Schema 定义 / DB client and schema definitions
-│   │   ├── schema.ts       # 核心实体定义 (Users, Seats, Reservations) / Core entity definitions
-│   │   └── index.ts        # 数据库连接配置 / Database connection config
-│   └── lib/                # 共享工具类与通用 Hook / Shared utilities and common hooks
-├── tests/                  # 业务逻辑集成测试 (预约算法校验) / Integration tests for business logic
-├── drizzle.config.ts       # Drizzle ORM 配置文件 / Drizzle ORM configuration
-├── next.config.ts          # Next.js 运行时配置 / Next.js runtime configuration
-└── package.json            # 依赖与脚本定义 / Dependencies and scripts
+│   ├── app/                # 核心路由与路由处理程序 / Core routes and handlers
+│   │   ├── api/            # Hono 驱动的 RESTful 端点实现 / Hono-driven RESTful endpoints
+│   │   └── (dashboard)/    # 仪表盘管理界面 / Dashboard management UI
+│   ├── components/         # 业务逻辑组件库 / Business logic components
+│   │   ├── spatial/        # 座位可视化核心组件 / Spatial visualization components
+│   │   └── ui/             # 基础原子 UI 组件 (shadcn) / Atomic UI components
+│   ├── db/                 # 数据持久层配置与 Schema 定义 / DAL config and schema definitions
+│   │   └── schema.ts       # 核心实体关系模型 / Core ER models
+│   └── lib/                # 跨模块共享逻辑与校验工具 / Cross-module logic and validation
+├── tests/                  # 包含边界值分析的集成测试用例 / Integration tests with BVA
+└── package.json            # 依赖管理与构建脚本 / Dependency and build scripts
 ```
 
-## 快速开始 / Quick Start
+## 部署与运行 / Deployment & Usage
 
-### 1. 克隆与安装 / Clone & Install
+### 前置要求 / Prerequisites
+- Node.js 20+ / Bun 1.1+
+- PostgreSQL 15+
+
+### 安装步骤 / Steps
 ```bash
-git clone https://github.com/saudademjj/library.git
-cd library
+# 安装全量依赖 / Install dependencies
 npm install
-```
 
-### 2. 环境配置 / Environment Configuration
-创建 `.env.local` 文件：
-```env
-DATABASE_URL=postgresql://user:password@localhost:5432/library
-JWT_SECRET=your_secure_secret_key
-```
+# 配置环境变量 / Setup environment
+cp .env.example .env.local
 
-### 3. 数据库初始化 / DB Initialization
-```bash
-npm run db:generate  # 生成迁移脚本 / Generate migrations
-npm run db:push      # 推送模式至数据库 / Push schema to DB
-npm run db:seed      # 填充演示数据 / Seed demo data
-```
+# 执行数据库迁移 / Execute migrations
+npm run db:push
 
-### 4. 启动开发服务器 / Run Dev Server
-```bash
+# 启动开发服务器 / Run development server
 npm run dev
 ```
 
-## 路线图 / Roadmap
-
-- [ ] 优化 3D 楼层预览 (3D Floor Preview Optimization)
-- [ ] 增加基于扫码的签到/签退功能 (QR-based Check-in/out)
-- [ ] 黑名单惩罚机制逻辑实现 (Blacklist & Penalty Logic)
-
 ## 许可证 / License
-本项目采用 [MIT License](LICENSE) 协议。 / This project is licensed under the MIT License.
+本项目遵循 MIT License 协议。 / Licensed under the MIT License.
