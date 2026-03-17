@@ -1,6 +1,7 @@
+English | [简体中文](README.md)
+
 # Library Seat Reservation System
 
-English | [简体中文](README.md)
 
 This is a full-stack seat reservation system for library or campus scenarios. It covers user registration and login, zone and seat management, reservation creation, conflict detection, and role-based access control. The repository combines the frontend, API layer, database migrations, and test scripts in one project.
 
