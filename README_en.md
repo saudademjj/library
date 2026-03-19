@@ -2,95 +2,166 @@
   English | <a href="./README.md">简体中文</a>
 </div>
 
-# Library Seat Reservation System
+# Library -- Modern Full-Stack Library Seat Reservation System
 
-![Next.js](https://img.shields.io/badge/Next.js-16.0-000000?style=flat-square&logo=next.js)
-![Hono](https://img.shields.io/badge/Hono-4.10-E36002?style=flat-square&logo=hono)
-![Drizzle](https://img.shields.io/badge/Drizzle_ORM-0.44-C5F74F?style=flat-square&logo=drizzle)
+![Next.js](https://img.shields.io/badge/Next.js-15+-000000?style=flat-square&logo=next.js)
+![React](https://img.shields.io/badge/React-19-61DAFB?style=flat-square&logo=react)
+![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?style=flat-square&logo=typescript)
+![TailwindCSS](https://img.shields.io/badge/Tailwind_CSS-4-06B6D4?style=flat-square&logo=tailwind-css)
+![Hono](https://img.shields.io/badge/Hono-API-E36002?style=flat-square&logo=hono)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-4169E1?style=flat-square&logo=postgresql)
+![Drizzle](https://img.shields.io/badge/Drizzle_ORM-0.44-C5F74F?style=flat-square)
 
-A high-performance, full-stack physical resource reservation management system. Designed to eliminate allocation conflicts and administrative overhead in high-concurrency campus library environments. By integrating Next.js Server Components with Hono Edge APIs, the system achieves millisecond-level response times and high-precision spatial visualization.
+A modern, full-stack library seat reservation system built with a cutting-edge technology stack. It features a seamless user experience, secure authentication, and efficient database operations, perfectly suited for managing library zones, seats, and user reservations.
 
-## 🏛️ Architectural Design
+## Core Features
 
-### 1. Technical Stack Justification
-- **Next.js 16 (App Router)**: Leverages React 19 Concurrent Mode and RSC (Server Components) to offload 80% of UI rendering to the server, significantly reducing client-side power consumption on mobile devices.
-- **Hono (API Layer)**: Deployed on Edge Runtime, Hono's minimalist footprint and ultra-fast routing engine reduce end-to-end API latency by approximately 40%.
-- **Drizzle ORM**: Unlike Prisma, Drizzle offers a zero-abstraction SQL building experience with native TypeScript synchronization between database schemas and frontend types.
+### User Management
+- Secure registration and login flow
+- JWT-based session management with Web Crypto API for secure hashing
+- Role-based access control (Admin / Student)
+- User profile maintenance and password changes
 
-### 2. Data Model & Entity Relationships
-The core system is built upon four primary entities to ensure flattened data structures and efficient retrieval:
-- **Users**: Stores academic credentials, profile data, and RBAC roles.
-- **Zones**: Spatial containers with metadata (floors, descriptions) and layout configurations.
-- **Seats**: The smallest physical units, defined by relative coordinates (x, y) within a Zone.
-- **Reservations**: The transaction core, linking Users and Seats with full temporal spans and state lifecycles.
+### Zone Management (Admin)
+- Full CRUD operations for library zones (floors, quiet areas, study rooms, etc.)
+- Zone capacity configuration and status management
+- Batch seat operations within zones
 
-### 3. Core Business Logic Implementation
+### Seat Management (Admin)
+- Dynamically create and edit seats within specific zones
+- Real-time seat availability toggling
+- Seat numbering and location identifier management
 
-#### Collision Detection Algorithm
-The system utilizes a **non-overlapping interval validation logic**. When a user attempts a reservation for `[T_start, T_end]`, the backend executes an atomic query:
-```sql
-SELECT count(*) FROM reservations 
-WHERE seat_id = $id 
-AND status NOT IN ('cancelled')
-AND (
-  (start_time, end_time) OVERLAPS ($T_start, $T_end)
-)
-```
-Leveraging database-level transaction locks or the `OVERLAPS` operator ensures absolute exclusivity at the physical layer.
+### Reservation System
+- Conflict-free seat booking logic preventing double reservations
+- Real-time status transitions: Pending -> Active -> Completed / Cancelled
+- Strict ownership rules: users can only manage their own bookings
+- Time-slot conflict detection and alerts
+- Historical reservation record queries
 
-#### Spatial Rendering Engine
-The frontend parses layout JSON from the backend into a dynamic map. Each seat is absolutely positioned based on its `rotation` and `coordinate` attributes, supporting responsive zooming and panning interactions.
+## Technical Architecture
 
-## 📂 Project Structure Analysis
+### Frontend Layer
+
+- Next.js 15+ App Router: Page rendering based on React Server Components
+- React 19: Latest concurrent features and Hooks ecosystem
+- TypeScript 5: End-to-end type safety
+- Tailwind CSS 4: Atomic CSS responsive layout
+- shadcn/ui: High-quality component library built on Radix UI
+- Lucide React: Consistent icon system
+
+### API Layer
+
+- Hono: Lightweight, high-performance web framework mounted on Next.js API Routes
+- Zod: Runtime request parameter validation
+- JWT: Stateless authentication tokens
+
+### Data Layer
+
+- PostgreSQL 16: Relational data persistence
+- Drizzle ORM: Type-safe ORM with migration management
+- Docker Compose: One-click database environment setup
+
+## Directory Structure
 
 ```text
 library/
-├── drizzle/                # Auto-generated SQL migrations and schema snapshots
-├── scripts/
-│   ├── seed.ts             # Mass-scale stress test data generation via Faker.js
-│   └── repair_db.ts        # Consistency repair tool for interrupted reservation states
 ├── src/
-│   ├── app/api/[[...route]] # Central Hono entry for unified backend route management
-│   ├── components/
-│   │   ├── spatial/        # Visualization core: Canvas/SVG coordinate mapping logic
-│   │   └── dashboard/      # Admin-side advanced statistics and resource monitors
-│   ├── db/
-│   │   ├── schema.ts       # Entity modeling using Drizzle pgTable definitions
-│   │   └── client.ts       # Connection pooling optimized for edge environments
-│   └── lib/                # JWT validation, temporal formatting, and constants
-├── tests/                  # Integration tests for collision and auto-cancellation logic
-└── next.config.ts          # Performance tuning for Webpack and Turbopack
+│   ├── app/                # Next.js App Router pages and layouts
+│   │   ├── api/            # Hono API route mount point
+│   │   ├── dashboard/      # Admin dashboard
+│   │   ├── reservations/   # Reservation management pages
+│   │   └── zones/          # Zone and seat browsing
+│   ├── components/         # UI components (shadcn/ui based)
+│   │   ├── ui/             # Base UI primitives
+│   │   └── ...             # Business components
+│   └── lib/                # Utilities, auth helpers
+├── drizzle/                # Database migration files
+├── drizzle.config.ts       # Drizzle ORM configuration
+├── scripts/
+│   ├── seed.ts             # Database seed data
+│   └── repair_db_full.ts   # Database repair script
+├── tests/                  # Test suites
+├── docker-compose.yml      # PostgreSQL container orchestration
+└── package.json            # Dependencies and scripts
 ```
 
-## 🚀 Developer Guide
+## Quick Start
 
-### 1. Prerequisites
-- Node.js >= 20.10.0
-- PostgreSQL >= 15
-- Docker (for rapid DB instance provisioning)
+### Prerequisites
 
-### 2. Deployment
+- Node.js >= 20
+- PostgreSQL >= 16 (or use Docker)
+
+### 1. Environment Setup
+
 ```bash
-# 1. Install all dependencies
-npm install
-
-# 2. Persistence Layer Setup
-# Copy template and fill DATABASE_URL
+git clone https://github.com/saudademjj/library.git
+cd library
 cp .env.example .env.local
+# Edit .env.local to configure DATABASE_URL and JWT_SECRET
+```
 
-# 3. Schema Push & Seeding
-npm run db:push
+### 2. Start Database
+
+```bash
+docker compose up -d
+```
+
+### 3. Install Dependencies and Initialize
+
+```bash
+npm install
+npm run db:migrate
 npm run db:seed
+```
 
-# 4. Launch Development Environment
+### 4. Start Development Server
+
+```bash
 npm run dev
 ```
 
-## 🛠️ Roadmap
-- [ ] **Visualization 2.0**: Three.js driven 3D floor navigation.
-- [ ] **Smart Dispatch**: Automated seat recommendation based on credit scores.
-- [ ] **Hardware Integration**: Real-time status sync via MQTT-enabled physical indicators.
+Visit `http://localhost:3000` to use the application.
+
+### Available Commands
+
+```bash
+npm run dev          # Start dev server (Webpack mode)
+npm run dev:turbo    # Start dev server (Turbopack mode)
+npm run build        # Production build
+npm run test         # Run tests
+npm run db:generate  # Generate migration files
+npm run db:migrate   # Execute database migrations
+npm run db:studio    # Launch Drizzle Studio visual manager
+npm run db:seed      # Populate seed data
+npm run db:repair    # Execute database repair
+npm run lint         # Linting
+```
+
+## Database Management
+
+### Migration Workflow
+
+```bash
+# Generate migration after schema changes
+npm run db:generate
+
+# Apply migrations to database
+npm run db:migrate
+
+# Visually inspect database
+npm run db:studio
+```
+
+### Data Repair
+
+When the database enters an inconsistent state, use the repair script:
+
+```bash
+npm run db:repair
+```
 
 ## License
+
 MIT License
