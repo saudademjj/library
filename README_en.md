@@ -4,15 +4,15 @@
 
 # Library -- Library Seat Reservation System
 
-![Next.js](https://img.shields.io/badge/Next.js-16-000000?style=flat-square&logo=next.js)
+![Next.js](https://img.shields.io/badge/Next.js-16.2.0-000000?style=flat-square&logo=next.js)
 ![React](https://img.shields.io/badge/React-19-61DAFB?style=flat-square&logo=react)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?style=flat-square&logo=typescript)
 ![TailwindCSS](https://img.shields.io/badge/Tailwind_CSS-4-06B6D4?style=flat-square&logo=tailwind-css)
-![Hono](https://img.shields.io/badge/Hono-4.10-E36002?style=flat-square&logo=hono)
+![Hono](https://img.shields.io/badge/Hono-4.12.8-E36002?style=flat-square&logo=hono)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-4169E1?style=flat-square&logo=postgresql)
 ![Drizzle](https://img.shields.io/badge/Drizzle_ORM-0.44-C5F74F?style=flat-square)
 
-A full-stack library seat reservation system built with Next.js 16 + Hono + Drizzle ORM + PostgreSQL. Features user registration/login, zone and seat management, conflict-free reservations, QR code check-in, leaderboard statistics, and role-based access control separating admin and student operations.
+A full-stack library seat reservation system built with Next.js 16.2 + Hono 4.12 + Drizzle ORM + PostgreSQL. Features user registration/login, zone and seat management, conflict-free reservations, QR code check-in, leaderboard statistics, and role-based access control separating admin and student operations.
 
 ---
 
@@ -59,7 +59,7 @@ A full-stack library seat reservation system built with Next.js 16 + Hono + Driz
 
 | Technology | Version | Description |
 |------------|---------|-------------|
-| Next.js | 16.0.10 | React full-stack framework, App Router |
+| Next.js | 16.2.0 | React full-stack framework, App Router |
 | React | 19.2.0 | UI library with concurrent features |
 | TypeScript | 5 | End-to-end type safety |
 | Tailwind CSS | 4 | Atomic CSS framework |
@@ -74,7 +74,7 @@ A full-stack library seat reservation system built with Next.js 16 + Hono + Driz
 
 | Technology | Version | Description |
 |------------|---------|-------------|
-| Hono | 4.10.7 | Lightweight web framework, mounted on Next.js API Routes |
+| Hono | 4.12.8 | Lightweight web framework, mounted on Next.js API Routes |
 | Drizzle ORM | 0.44.7 | Type-safe ORM |
 | PostgreSQL | 16+ | Relational database |
 | jose | 6.1.3 | JWT signing and verification |
@@ -143,9 +143,16 @@ library/
 │   └── verify_repair.ts           # Repair verification
 ├── drizzle/                        # Migration files (7 versions)
 ├── tests/
-│   ├── auth-security.test.ts       # Auth security tests
+│   ├── auth-security.test.ts       # JWT secret and auth security tests
+│   ├── auth-helpers.test.ts        # Password hashing and reset token tests
+│   ├── client-auth.test.ts         # Client auth storage tests
+│   ├── datetime.test.ts            # Timezone and date utility tests
 │   ├── middleware-auth.test.ts     # Middleware tests
-│   └── reservation-policy.test.ts  # Reservation policy tests
+│   ├── reservation-policy.test.ts  # Reservation policy tests
+│   ├── utils.test.ts               # Shared utility tests
+│   └── db-smoke.db.test.ts         # Migration and seed smoke tests
+├── .github/workflows/
+│   └── ci.yml                      # GitHub Actions CI workflow
 ├── docker-compose.yml              # PostgreSQL container orchestration
 └── package.json
 ```
@@ -215,8 +222,19 @@ npm run dev:turbo       # Start dev server (Turbopack)
 npm run build           # Production build
 npm run start           # Start production server
 npm run test            # Run tests
+npm run test:coverage   # Generate text + lcov coverage reports
+npm run test:db         # Run database smoke tests
+npm run test:ci         # Run the local CI baseline
 npm run lint            # Linting
+npm run typecheck       # TypeScript type checking
 ```
+
+## CI / Continuous Integration
+
+- The GitHub Actions workflow lives in `.github/workflows/ci.yml`
+- Node.js 20 / 22 matrix jobs run linting, type checking, and core automated tests
+- Coverage is generated separately and uploaded as an artifact for regression analysis
+- PostgreSQL 16 is started in CI for migrations, seeding, and database smoke validation
 
 ### Database Management
 
