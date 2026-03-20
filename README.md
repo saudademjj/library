@@ -4,15 +4,15 @@
 
 # Library -- 图书馆座位预约系统
 
-![Next.js](https://img.shields.io/badge/Next.js-16-000000?style=flat-square&logo=next.js)
+![Next.js](https://img.shields.io/badge/Next.js-16.2.0-000000?style=flat-square&logo=next.js)
 ![React](https://img.shields.io/badge/React-19-61DAFB?style=flat-square&logo=react)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?style=flat-square&logo=typescript)
 ![TailwindCSS](https://img.shields.io/badge/Tailwind_CSS-4-06B6D4?style=flat-square&logo=tailwind-css)
-![Hono](https://img.shields.io/badge/Hono-4.10-E36002?style=flat-square&logo=hono)
+![Hono](https://img.shields.io/badge/Hono-4.12.8-E36002?style=flat-square&logo=hono)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-4169E1?style=flat-square&logo=postgresql)
 ![Drizzle](https://img.shields.io/badge/Drizzle_ORM-0.44-C5F74F?style=flat-square)
 
-一个全栈图书馆座位预约系统，基于 Next.js 16 + Hono + Drizzle ORM + PostgreSQL 构建。支持用户注册登录、区域与座位管理、无冲突预约、QR 码签到、排行榜统计等功能，采用角色权限控制区分管理员与学生操作。
+一个全栈图书馆座位预约系统，基于 Next.js 16.2 + Hono 4.12 + Drizzle ORM + PostgreSQL 构建。支持用户注册登录、区域与座位管理、无冲突预约、QR 码签到、排行榜统计等功能，采用角色权限控制区分管理员与学生操作。
 
 ---
 
@@ -59,7 +59,7 @@
 
 | 技术 | 版本 | 说明 |
 |------|------|------|
-| Next.js | 16.0.10 | React 全栈框架，App Router |
+| Next.js | 16.2.0 | React 全栈框架，App Router |
 | React | 19.2.0 | UI 库，并发特性 |
 | TypeScript | 5 | 全链路类型安全 |
 | Tailwind CSS | 4 | 原子化 CSS 框架 |
@@ -74,7 +74,7 @@
 
 | 技术 | 版本 | 说明 |
 |------|------|------|
-| Hono | 4.10.7 | 轻量 Web 框架，挂载于 Next.js API Routes |
+| Hono | 4.12.8 | 轻量 Web 框架，挂载于 Next.js API Routes |
 | Drizzle ORM | 0.44.7 | 类型安全的 ORM |
 | PostgreSQL | 16+ | 关系型数据库 |
 | jose | 6.1.3 | JWT 签发与验证 |
@@ -143,9 +143,16 @@ library/
 │   └── verify_repair.ts           # 修复验证
 ├── drizzle/                        # 迁移文件（7 个版本）
 ├── tests/
-│   ├── auth-security.test.ts       # 认证安全测试
+│   ├── auth-security.test.ts       # JWT 密钥与认证安全测试
+│   ├── auth-helpers.test.ts        # 密码哈希与重置令牌测试
+│   ├── client-auth.test.ts         # 客户端鉴权存储测试
+│   ├── datetime.test.ts            # 时区与时间工具测试
 │   ├── middleware-auth.test.ts     # 中间件测试
-│   └── reservation-policy.test.ts  # 预约策略测试
+│   ├── reservation-policy.test.ts  # 预约策略测试
+│   ├── utils.test.ts               # 通用工具测试
+│   └── db-smoke.db.test.ts         # 数据库迁移/种子冒烟测试
+├── .github/workflows/
+│   └── ci.yml                      # GitHub Actions 持续集成流程
 ├── docker-compose.yml              # PostgreSQL 容器编排
 └── package.json
 ```
@@ -215,8 +222,19 @@ npm run dev:turbo       # 启动开发服务器（Turbopack）
 npm run build           # 生产构建
 npm run start           # 启动生产服务器
 npm run test            # 运行测试
+npm run test:coverage   # 生成覆盖率报告（文本 + lcov）
+npm run test:db         # 运行数据库冒烟测试
+npm run test:ci         # 本地执行 CI 基础校验链
 npm run lint            # 代码检查
+npm run typecheck       # TypeScript 类型检查
 ```
+
+## CI / 持续集成
+
+- GitHub Actions 工作流位于 `.github/workflows/ci.yml`
+- Node.js 20 / 22 矩阵执行 `lint`、`typecheck`、核心自动化测试
+- 单独生成覆盖率报告并上传为构件，便于排查回归
+- 启动 PostgreSQL 16 服务做迁移、种子填充和数据库冒烟验证
 
 ### 数据库管理
 

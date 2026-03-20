@@ -39,3 +39,21 @@ export function getDb(): NodePgDatabase<typeof schema> {
   productionDb ??= drizzle(productionPool, { schema });
   return productionDb;
 }
+
+export async function closeDbConnections(): Promise<void> {
+  const pools = new Set<Pool>();
+
+  if (globalForDb.__tech_stack_overview_pool) {
+    pools.add(globalForDb.__tech_stack_overview_pool);
+    globalForDb.__tech_stack_overview_pool = undefined;
+    globalForDb.__tech_stack_overview_db = undefined;
+  }
+
+  if (productionPool) {
+    pools.add(productionPool);
+    productionPool = undefined;
+    productionDb = undefined;
+  }
+
+  await Promise.all(Array.from(pools, (pool) => pool.end()));
+}
